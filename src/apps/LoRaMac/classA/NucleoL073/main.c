@@ -28,6 +28,7 @@
 #include "gpio.h"
 #include "LoRaMac.h"
 #include "Commissioning.h"
+#include <stdio.h>
 
 #ifndef ACTIVE_REGION
 
@@ -56,7 +57,7 @@
 /*!
  * LoRaWAN confirmed messages
  */
-#define LORAWAN_CONFIRMED_MSG_ON                    false
+#define LORAWAN_CONFIRMED_MSG_ON                    true 
 
 /*!
  * LoRaWAN Adaptive Data Rate
@@ -98,6 +99,10 @@ static uint8_t AppSKey[] = LORAWAN_APPSKEY;
 static uint32_t DevAddr = LORAWAN_DEVICE_ADDRESS;
 
 #endif
+
+static uint16_t channel_mask[6] = {\
+0x00ff,0x0000,0x0000,0x0000,0x0000,0x0000 
+};
 
 /*!
  * Application port
@@ -306,6 +311,7 @@ static bool SendFrame( void )
     {
         if( IsTxConfirmed == false )
         {
+            printf("\n\n\n==================================\nUNCONFIRM\n==================================\n");
             mcpsReq.Type = MCPS_UNCONFIRMED;
             mcpsReq.Req.Unconfirmed.fPort = AppPort;
             mcpsReq.Req.Unconfirmed.fBuffer = AppData;
@@ -314,6 +320,7 @@ static bool SendFrame( void )
         }
         else
         {
+            printf("\n\n\n==================================\nCOMFIRM\n==================================\n");
             mcpsReq.Type = MCPS_CONFIRMED;
             mcpsReq.Req.Confirmed.fPort = AppPort;
             mcpsReq.Req.Confirmed.fBuffer = AppData;
@@ -360,12 +367,15 @@ static void OnTxNextPacketTimerEvent( void )
             mlmeReq.Req.Join.AppKey = AppKey;
             mlmeReq.Req.Join.Datarate = LORAWAN_DEFAULT_DATARATE;
 
+            printf("\n\n\n==================================\nJOIN\n==================================\n");
             if( LoRaMacMlmeRequest( &mlmeReq ) == LORAMAC_STATUS_OK )
             {
+                printf("Send join-req success!\n");
                 DeviceState = DEVICE_STATE_SLEEP;
             }
             else
             {
+                printf("Send join-req fail!\n");
                 DeviceState = DEVICE_STATE_CYCLE;
             }
         }
@@ -677,13 +687,16 @@ static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
                 mlmeReq.Req.Join.AppKey = AppKey;
                 mlmeReq.Req.Join.Datarate = LORAWAN_DEFAULT_DATARATE;
 
+                printf("\n\n\n==================================\nJOIN\n==================================\n");
                 if( LoRaMacMlmeRequest( &mlmeReq ) == LORAMAC_STATUS_OK )
                 {
                     DeviceState = DEVICE_STATE_SLEEP;
+                    printf("Send join-req success!\n");
                 }
                 else
                 {
                     DeviceState = DEVICE_STATE_CYCLE;
+                    printf("Send join-req fail!\n");
                 }
             }
             break;
@@ -739,9 +752,10 @@ int main( void )
 
     BoardInitMcu( );
     BoardInitPeriph( );
+    printf("LoRaWan v1.0.2\n");
 
     DeviceState = DEVICE_STATE_INIT;
-
+    
     while( 1 )
     {
         switch( DeviceState )
@@ -771,6 +785,14 @@ int main( void )
                 mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
                 LoRaMacMibSetRequestConfirm( &mibReq );
 
+                mibReq.Type = MIB_CHANNELS_MASK;
+                mibReq.Param.ChannelsMask = channel_mask;
+                LoRaMacMibSetRequestConfirm( &mibReq );
+                mibReq.Type = MIB_CHANNELS_DEFAULT_MASK;
+                mibReq.Param.ChannelsDefaultMask = channel_mask;
+                LoRaMacMibSetRequestConfirm( &mibReq );
+
+
 #if defined( REGION_EU868 )
                 LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
 #endif
@@ -783,7 +805,7 @@ int main( void )
                 MlmeReq_t mlmeReq;
 
                 // Initialize LoRaMac device unique ID
-                BoardGetUniqueId( DevEui );
+//                BoardGetUniqueId( DevEui );
 
                 mlmeReq.Type = MLME_JOIN;
 
@@ -791,13 +813,17 @@ int main( void )
                 mlmeReq.Req.Join.AppEui = AppEui;
                 mlmeReq.Req.Join.AppKey = AppKey;
                 mlmeReq.Req.Join.Datarate = LORAWAN_DEFAULT_DATARATE;
-
+                
+                printf("\n\n\n==================================\nJOIN\n==================================\n");
                 if( LoRaMacMlmeRequest( &mlmeReq ) == LORAMAC_STATUS_OK )
                 {
                     DeviceState = DEVICE_STATE_SLEEP;
+                    printf("Send join-req success!\n");
+                    HAL_Delay(1000);
                 }
                 else
                 {
+                    printf("Send join-req fail!\n");
                     DeviceState = DEVICE_STATE_CYCLE;
                 }
 #else
@@ -868,9 +894,9 @@ int main( void )
             case DEVICE_STATE_SLEEP:
             {
                 // Wake up through events
-                TimerLowPowerHandler( );
+                //TimerLowPowerHandler( );
                 // Process Radio IRQ
-                Radio.IrqProcess( );
+                //Radio.IrqProcess( );
                 break;
             }
             default:

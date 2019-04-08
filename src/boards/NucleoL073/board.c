@@ -32,11 +32,11 @@
 #include "rtc-board.h"
 
 #if defined( SX1261DVK1BAS ) || defined( SX1262DVK1CAS ) || defined( SX1262DVK1DAS )
-    #include "sx126x-board.h"
+#include "sx126x-board.h"
 #elif defined( SX1272MB2DAS)
-    #include "sx1272-board.h"
+#include "sx1272-board.h"
 #elif defined( SX1276MB1LAS ) || defined( SX1276MB1MAS )
-    #include "sx1276-board.h"
+#include "sx1276-board.h"
 #endif
 #include "board.h"
 
@@ -365,15 +365,49 @@ uint8_t GetBoardPowerSource( void )
     }
 }
 
-#ifdef __GNUC__
-int __io_putchar( int c )
-#else /* __GNUC__ */
-int fputc( int c, FILE *stream )
-#endif
+
+#if !defined ( __CC_ARM )
+
+/*
+ * Function to be used by stdout for printf etc
+ */
+int _write( int fd, const void *buf, size_t count )
 {
-    while( UartPutChar( &Uart2, c ) != 0 );
+    while( UartPutBuffer( &Uart2, ( uint8_t* )buf, ( uint16_t )count ) != 0 ){ };
+    return count;
+}
+
+/*
+ * Function to be used by stdin for scanf etc
+ */
+int _read( int fd, const void *buf, size_t count )
+{
+    size_t bytesRead = 0;
+    while( UartGetBuffer( &Uart2, ( uint8_t* )buf, count, ( uint16_t* )&bytesRead ) != 0 ){ };
+    // Echo back the character
+    while( UartPutBuffer( &Uart2, ( uint8_t* )buf, ( uint16_t )bytesRead ) != 0 ){ };
+    return bytesRead;
+}
+
+#else
+
+// Keil compiler
+int fputc( int c, FILE *stream )
+{
+    while( UartPutChar( &Uart2, ( uint8_t )c ) != 0 );
     return c;
 }
+
+int fgetc( FILE *stream )
+{
+    uint8_t c = 0;
+    while( UartGetChar( &Uart2, &c ) != 0 );
+    // Echo back the character
+    while( UartPutChar( &Uart2, c ) != 0 );
+    return ( int )c;
+}
+
+#endif
 
 #ifdef USE_FULL_ASSERT
 /*
@@ -388,7 +422,7 @@ int fputc( int c, FILE *stream )
 void assert_failed( uint8_t* file, uint32_t line )
 {
     /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %lu\r\n", file, line) */
+ex: printf("Wrong parameters value: file %s on line %lu\r\n", file, line) */
 
     printf( "Wrong parameters value: file %s on line %lu\r\n", ( const char* )file, line );
     /* Infinite loop */

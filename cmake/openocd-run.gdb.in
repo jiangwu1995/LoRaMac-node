@@ -1,4 +1,4 @@
-file @TARGET_NAME@
+file @PROJECT_BINARY_DIR@/@TARGET_NAME@
 target extended-remote localhost:3333
 monitor reset halt
 load

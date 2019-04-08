@@ -32,6 +32,7 @@
 #include "LoRaMac.h"
 #include "LoRaMacCrypto.h"
 #include "LoRaMacTest.h"
+#include <stdio.h>
 
 /*!
  * Maximum PHY layer payload size
@@ -653,6 +654,7 @@ static void OnRadioTxDone( void )
     SetBandTxDoneParams_t txDone;
     TimerTime_t curTime = TimerGetCurrentTime( );
 
+    printf("OnRadioTxDone procedure!\n");
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -779,6 +781,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
     McpsIndication.DownLinkCounter = 0;
     McpsIndication.McpsIndication = MCPS_UNCONFIRMED;
 
+    printf("OnRadioRxDone procedure!\n");
     Radio.Sleep( );
     TimerStop( &RxWindowTimer2 );
 
@@ -1201,6 +1204,7 @@ static void OnRadioRxError( void )
 
 static void OnRadioRxTimeout( void )
 {
+    printf("OnRadioRxTimeout procedure!\n");
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -2313,6 +2317,20 @@ LoRaMacStatus_t PrepareFrame( LoRaMacHeader_t *macHdr, LoRaMacFrameCtrl_t *fCtrl
     return LORAMAC_STATUS_OK;
 }
 
+void dump_buf(uint8_t *buf, uint16_t size)
+{
+    uint8_t i;
+
+    printf("==================================\n");
+    for(i = 0; i < size; i++)
+    {
+        printf("%.02x ", buf[i]);
+    }
+    printf("\n");
+    printf("==================================\n");
+
+}
+
 LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
 {
     TxConfigParams_t txConfig;
@@ -2325,6 +2343,8 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     txConfig.AntennaGain = LoRaMacParams.AntennaGain;
     txConfig.PktLen = LoRaMacBufferPktLen;
 
+    printf("Radio send, channle:%d, dr: %d, pwr:%d\n", channel, LoRaMacParams.ChannelsDatarate, \
+                                                          LoRaMacParams.ChannelsTxPower);
     RegionTxConfig( LoRaMacRegion, &txConfig, &txPower, &TxTimeOnAir );
 
     MlmeConfirm.Status = LORAMAC_EVENT_INFO_STATUS_ERROR;
@@ -2343,6 +2363,7 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
 
     // Send now
     Radio.Send( LoRaMacBuffer, LoRaMacBufferPktLen );
+    dump_buf(LoRaMacBuffer, LoRaMacBufferPktLen);
 
     LoRaMacState |= LORAMAC_TX_RUNNING;
 

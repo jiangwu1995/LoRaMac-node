@@ -1,7 +1,7 @@
 /*!
- * \file      sx1276mb1las-board.c
+ * \file      sx1276mb1mas-board.c
  *
- * \brief     Target board SX1276MB1LAS shield driver implementation
+ * \brief     Target board SX1276MB1MAS shield driver implementation
  *
  * \copyright Revised BSD License, see section \ref LICENSE.
  *
@@ -210,14 +210,7 @@ void SX1276SetRfTxPower( int8_t power )
 
 uint8_t SX1276GetPaSelect( uint32_t channel )
 {
-    if( channel > RF_MID_BAND_THRESH )
-    {
-        return RF_PACONFIG_PASELECT_PABOOST;
-    }
-    else
-    {
-        return RF_PACONFIG_PASELECT_RFO;
-    }
+    return RF_PACONFIG_PASELECT_RFO;
 }
 
 void SX1276SetAntSwLowPower( bool status )

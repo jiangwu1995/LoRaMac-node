@@ -95,7 +95,7 @@
 /*!
  * Default Tx output power used by the node
  */
-#define CN470_DEFAULT_TX_POWER                    TX_POWER_0
+#define CN470_DEFAULT_TX_POWER                    TX_POWER_3
 
 /*!
  * Default Max EIRP

@@ -27,7 +27,7 @@
  * When set to 1 the application uses the Over-the-Air activation procedure
  * When set to 0 the application uses the Personalization activation procedure
  */
-#define OVER_THE_AIR_ACTIVATION                     0
+#define OVER_THE_AIR_ACTIVATION                     1
 
 /*!
  * Indicates if the end-device is to be connected to a private or public network
@@ -38,7 +38,7 @@
  * IEEE Organizationally Unique Identifier ( OUI ) (big endian)
  * \remark This is unique to a company or organization
  */
-#define IEEE_OUI                                    0x00, 0x00, 0x00
+#define IEEE_OUI                                    0xff, 0xff, 0x00
 
 /*!
  * Mote device IEEE EUI (big endian)
